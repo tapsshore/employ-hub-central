@@ -33,24 +33,31 @@ const mockUsers: User[] = [
 ];
 
 // For demonstration purposes - use a simple login function
-// In a real implementation, this would make an API call to an authentication endpoint
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  console.log("Login attempt:", credentials.email);
+  
   // Simulate API call
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const { email, password } = credentials;
       
-      // Find user by email
-      const user = mockUsers.find(u => u.email === email);
+      // Find user by email (case insensitive)
+      const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      console.log("User found:", user ? "yes" : "no");
       
       // Check if user exists and password is correct (mock validation)
       if (user && password === "password") {
-        resolve({
+        const response: AuthResponse = {
           user,
           token: "mock_jwt_token",
           refreshToken: "mock_refresh_token"
-        });
+        };
+        
+        console.log("Login successful");
+        resolve(response);
       } else {
+        console.log("Invalid email or password");
         reject(new Error("Invalid email or password"));
       }
     }, 1000); // Simulate network delay
@@ -61,6 +68,12 @@ export const logout = async (): Promise<void> => {
   // Simulate API call
   return new Promise((resolve) => {
     setTimeout(() => {
+      // Clear local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userRole");
+      
       resolve();
     }, 500);
   });

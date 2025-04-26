@@ -7,21 +7,29 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { login } from "@/services/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError("");
+    
+    console.log("Attempting login with:", { email });
     
     try {
       const response = await login({ email, password });
+      console.log("Login successful:", response);
       
-      // Store authentication data in localStorage (in a real app, consider using a more secure method)
+      // Store authentication data in localStorage
       localStorage.setItem("token", response.token);
       localStorage.setItem("refreshToken", response.refreshToken);
       localStorage.setItem("userEmail", response.user.email);
@@ -35,12 +43,17 @@ const LoginForm = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
+      setLoginError("Invalid email or password. Please try again.");
       toast.error("Login failed", {
         description: "Invalid email or password. Please try again.",
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -53,6 +66,12 @@ const LoginForm = () => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {loginError && (
+            <Alert variant="destructive">
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -80,13 +99,22 @@ const LoginForm = () => {
                 Forgot password?
               </a>
             </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button 
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
         </CardContent>
         <CardFooter>
@@ -94,6 +122,17 @@ const LoginForm = () => {
             {isLoading ? "Logging in..." : "Login"}
           </Button>
         </CardFooter>
+        <div className="p-4 text-center text-sm">
+          <p className="text-muted-foreground">
+            Demo accounts:
+          </p>
+          <div className="text-xs mt-1 space-y-1 text-muted-foreground">
+            <p>Admin: admin@example.com</p>
+            <p>HR: hr@example.com</p>
+            <p>Employee: employee@example.com</p>
+            <p>Password for all: "password"</p>
+          </div>
+        </div>
       </form>
     </Card>
   );
