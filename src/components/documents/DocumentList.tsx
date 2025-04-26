@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -26,9 +25,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Document, DocumentType, DocumentStatus, UserRole } from "@/lib/types";
-import { getDocumentsByEmployee, getDocumentDownloadUrl } from "@/services/document";
+import { getDocumentsByEmployee, getDocumentDownloadUrl, deleteDocument, uploadDocument } from "@/services/document";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { ViewDocumentModal } from "./ViewDocumentModal";
+import { Eye } from "lucide-react";
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -37,6 +38,7 @@ const DocumentList = () => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [employeeNumber, setEmployeeNumber] = useState<string>("EMP001"); // In a real app, this might come from a prop or context
+  const [viewDocument, setViewDocument] = useState<Document | null>(null);
   
   // In a real implementation, this would come from an auth context or store
   const userRole = localStorage.getItem("userRole") as UserRole || UserRole.EMPLOYEE;
@@ -176,13 +178,50 @@ const DocumentList = () => {
     const matchesSearch =
       doc.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.documentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.employeeNumber.toLowerCase().includes(searchTerm.toLowerCase());
       
     const matchesType = selectedType === "all" ? true : doc.documentType === selectedType;
     const matchesStatus = selectedStatus === "all" ? true : doc.status === selectedStatus;
     
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  const handleDeleteDocument = async (id: string): Promise<boolean> => {
+    try {
+      const isDeleted = await deleteDocument(id);
+      if (isDeleted) {
+        toast.success("Document deleted successfully");
+        return true;
+      }
+      toast.error("Failed to delete document");
+      return false;
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("An error occurred while deleting the document");
+      return false;
+    }
+  };
+
+  const handleUploadDocument = async (file: File, documentData: Partial<Document>): Promise<Document | null> => {
+    try {
+      // In a real implementation, this would upload to a file storage service
+      const filePath = URL.createObjectURL(file);
+      const document = await uploadDocument({
+        ...documentData,
+        fileName: file.name,
+        filePath,
+        status: DocumentStatus.ACTIVE,
+      } as Omit<Document, "id" | "uploadDate">);
+      
+      toast.success("Document uploaded successfully");
+      return document;
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast.error("An error occurred while uploading the document");
+      return null;
+    }
+  };
 
   return (
     <Card>
@@ -200,7 +239,7 @@ const DocumentList = () => {
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <Input
-            placeholder="Search documents..."
+            placeholder="Search by document name or employee number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -244,58 +283,86 @@ const DocumentList = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hr-primary"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Uploaded By</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDocuments.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Document</TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Uploaded By</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDocuments.map((document) => (
+                <TableRow key={document.id}>
+                  <TableCell className="font-medium">
+                    {document.fileName}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className="font-medium">{document.employeeNumber}</div>
+                      <div className="text-muted-foreground">{document.uploadedBy}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{document.documentType}</TableCell>
+                  <TableCell>{document.uploadedBy}</TableCell>
+                  <TableCell>
+                    {format(new Date(document.uploadDate), "dd MMM yyyy")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        document.status === DocumentStatus.ACTIVE
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }
                     >
-                      No documents found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredDocuments.map((document) => (
-                    <TableRow key={document.id}>
-                      <TableCell className="font-medium flex items-center gap-2">
-                        {getDocumentTypeIcon(document.documentType)}
-                        {document.fileName}
-                      </TableCell>
-                      <TableCell>{document.documentType}</TableCell>
-                      <TableCell>{document.uploadedBy}</TableCell>
-                      <TableCell>
-                        {format(new Date(document.uploadDate), "dd MMM yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            document.status === DocumentStatus.ACTIVE
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }
+                      {document.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewDocument(document)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(document.id)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4 mr-1"
                         >
-                          {document.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" x2="12" y1="15" y2="3" />
+                        </svg>
+                        Download
+                      </Button>
+                      {canManageDocuments && (
+                        <>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownload(document.id)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -307,74 +374,56 @@ const DocumentList = () => {
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="h-4 w-4 mr-1"
+                              className="h-4 w-4"
                             >
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="7 10 12 15 17 10" />
-                              <line x1="12" x2="12" y1="15" y2="3" />
+                              <path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-6" />
+                              <polyline points="14 2 14 8 20 8" />
+                              <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
                             </svg>
-                            Download
                           </Button>
-                          {canManageDocuments && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => handleDeleteDocument(document.id)}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-4 w-4"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="h-4 w-4"
-                                >
-                                  <path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-6" />
-                                  <polyline points="14 2 14 8 20 8" />
-                                  <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
-                                </svg>
-                              </Button>
-                              {isAdmin && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-500"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-4 w-4"
-                                  >
-                                    <path d="M3 6h18" />
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                    <line x1="10" x2="10" y1="11" y2="17" />
-                                    <line x1="14" x2="14" y1="11" y2="17" />
-                                  </svg>
-                                </Button>
-                              )}
-                            </>
+                                <path d="M3 6h18" />
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                <line x1="10" x2="10" y1="11" y2="17" />
+                                <line x1="14" x2="14" y1="11" y2="17" />
+                              </svg>
+                            </Button>
                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+
+        {viewDocument && (
+          <ViewDocumentModal
+            isOpen={!!viewDocument}
+            onClose={() => setViewDocument(null)}
+            document={viewDocument}
+          />
         )}
       </CardContent>
     </Card>

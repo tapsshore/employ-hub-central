@@ -1,5 +1,5 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Eye, UserPlus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -29,7 +29,6 @@ const EmployeeList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
-  // In a real implementation, this would come from an auth context or store
   const userRole = localStorage.getItem("userRole") as UserRole || UserRole.EMPLOYEE;
   
   const isAdmin = userRole === UserRole.ADMIN;
@@ -76,6 +75,14 @@ const EmployeeList = () => {
       employee.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleViewEmployee = (employee: Employee) => {
+    console.log("View employee:", employee);
+  };
+
+  const handleInviteEmployee = () => {
+    console.log("Invite employee clicked");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -87,9 +94,18 @@ const EmployeeList = () => {
             </CardDescription>
           </div>
           {canManageEmployees && (
-            <Button className="bg-hr-primary hover:bg-hr-primary/90">
-              Add Employee
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={handleInviteEmployee}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite Employee
+              </Button>
+              <Button className="bg-hr-primary hover:bg-hr-primary/90">
+                Add Employee
+              </Button>
+            </div>
           )}
         </div>
         <div className="mt-4">
@@ -163,51 +179,40 @@ const EmployeeList = () => {
                           <TableCell>
                             <div className="flex gap-2">
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewEmployee(employee)}
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="h-4 w-4"
-                                >
-                                  <path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-6" />
-                                  <polyline points="14 2 14 8 20 8" />
-                                  <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
-                                </svg>
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="h-4 w-4"
+                              {isAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-500"
+                                  onClick={() => handleDeleteEmployee(employee.id)}
                                 >
-                                  <path d="M3 6h18" />
-                                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                  <line x1="10" x2="10" y1="11" y2="17" />
-                                  <line x1="14" x2="14" y1="11" y2="17" />
-                                </svg>
-                              </Button>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                  >
+                                    <path d="M3 6h18" />
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                    <line x1="10" x2="10" y1="11" y2="17" />
+                                    <line x1="14" x2="14" y1="11" y2="17" />
+                                  </svg>
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         )}
@@ -218,7 +223,6 @@ const EmployeeList = () => {
               </Table>
             </div>
             
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-4">
                 <div className="flex items-center space-x-2">

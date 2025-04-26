@@ -1,4 +1,3 @@
-
 import { Document, DocumentType, DocumentStatus } from "../lib/types";
 
 // Mock data - In a real implementation, this would be replaced with API calls
@@ -139,4 +138,40 @@ export const getDocumentDownloadUrl = async (id: string): Promise<string | null>
       }
     }, 300);
   });
+};
+
+export const handleDeleteDocument = async (id: string): Promise<boolean> => {
+  try {
+    const isDeleted = await deleteDocument(id);
+    if (isDeleted) {
+      toast.success("Document deleted successfully");
+      return true;
+    }
+    toast.error("Failed to delete document");
+    return false;
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    toast.error("An error occurred while deleting the document");
+    return false;
+  }
+};
+
+export const handleUploadDocument = async (file: File, documentData: Partial<Document>): Promise<Document | null> => {
+  try {
+    // In a real implementation, this would upload to a file storage service
+    const filePath = URL.createObjectURL(file);
+    const document = await uploadDocument({
+      ...documentData,
+      fileName: file.name,
+      filePath,
+      status: DocumentStatus.ACTIVE,
+    } as Omit<Document, "id" | "uploadDate">);
+    
+    toast.success("Document uploaded successfully");
+    return document;
+  } catch (error) {
+    console.error("Error uploading document:", error);
+    toast.error("An error occurred while uploading the document");
+    return null;
+  }
 };
