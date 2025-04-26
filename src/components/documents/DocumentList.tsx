@@ -34,8 +34,8 @@ const DocumentList = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [employeeNumber, setEmployeeNumber] = useState<string>("EMP001"); // In a real app, this might come from a prop or context
   
   // In a real implementation, this would come from an auth context or store
@@ -178,8 +178,8 @@ const DocumentList = () => {
       doc.documentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase());
       
-    const matchesType = selectedType ? doc.documentType === selectedType : true;
-    const matchesStatus = selectedStatus ? doc.status === selectedStatus : true;
+    const matchesType = selectedType === "all" ? true : doc.documentType === selectedType;
+    const matchesStatus = selectedStatus === "all" ? true : doc.status === selectedStatus;
     
     return matchesSearch && matchesType && matchesStatus;
   });
@@ -212,7 +212,7 @@ const DocumentList = () => {
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               {Object.values(DocumentType).map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
@@ -228,7 +228,7 @@ const DocumentList = () => {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               {Object.values(DocumentStatus).map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
