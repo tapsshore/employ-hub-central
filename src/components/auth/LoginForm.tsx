@@ -22,23 +22,30 @@ const LoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError("");
-    
+
     console.log("Attempting login with:", { email });
-    
+
     try {
       const response = await login({ email, password });
       console.log("Login successful:", response);
-      
+
       // Store authentication data in localStorage
-      localStorage.setItem("token", response.token);
+      localStorage.setItem("token", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
-      localStorage.setItem("userEmail", response.user.email);
-      localStorage.setItem("userRole", response.user.role);
-      
+      localStorage.setItem("userEmail", email);
+      // Extract role from JWT token
+      try {
+        const tokenPayload = JSON.parse(atob(response.accessToken.split('.')[1]));
+        localStorage.setItem("userRole", tokenPayload.role);
+      } catch (e) {
+        console.error("Error parsing token:", e);
+        localStorage.setItem("userRole", "");
+      }
+
       toast.success("Login successful", {
-        description: `Welcome back, ${response.user.firstName}!`,
+        description: "Welcome back!",
       });
-      
+
       // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {

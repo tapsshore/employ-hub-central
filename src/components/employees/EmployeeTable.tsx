@@ -1,5 +1,5 @@
 
-import { Eye } from "lucide-react";
+import { Eye, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Employee, ContractType, UserRole } from "@/lib/types";
+import { Employee, ContractType } from "@/lib/types";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -19,6 +19,7 @@ interface EmployeeTableProps {
   isAdmin: boolean;
   onViewEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
+  onEditEmployee?: (employee: Employee) => void;
 }
 
 const EmployeeTable = ({
@@ -27,6 +28,7 @@ const EmployeeTable = ({
   isAdmin,
   onViewEmployee,
   onDeleteEmployee,
+  onEditEmployee,
 }: EmployeeTableProps) => {
   const getContractBadgeColor = (contractType: ContractType) => {
     switch (contractType) {
@@ -107,6 +109,16 @@ const EmployeeTable = ({
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
+                      {onEditEmployee && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEditEmployee(employee)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                       {isAdmin && (
                         <Button
                           variant="ghost"

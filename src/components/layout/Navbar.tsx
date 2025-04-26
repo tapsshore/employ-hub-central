@@ -15,6 +15,8 @@ import {
 import { toast } from "sonner";
 import { logout } from "@/services/auth";
 import { UserRole } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import logoImage from "@/uploads/logo.png";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -23,25 +25,25 @@ interface NavbarProps {
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
+
   // In a real implementation, this would come from an auth context or store
   const userRole = localStorage.getItem("userRole") as UserRole || UserRole.EMPLOYEE;
   const userEmail = localStorage.getItem("userEmail") || "user@example.com";
   const userInitials = userEmail.substring(0, 2).toUpperCase();
-  
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
-      
+
       // Clear authentication data from localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userRole");
-      
+
       toast.success("Logged out successfully");
-      
+
       // Redirect to login page
       navigate("/");
     } catch (error) {
@@ -80,9 +82,13 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         </svg>
       </Button>
       <div className="flex-1">
-        <h1 className="text-xl font-bold">HR Management System</h1>
+        <h1 className="text-xl font-bold flex items-center">
+          <img src={logoImage} alt="Company Logo" className="ml-2 h-8" />
+          African Chrome Fields
+        </h1>
       </div>
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

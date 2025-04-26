@@ -74,21 +74,62 @@ export const getEmployees = async (page = 1, limit = 10): Promise<{
   page: number;
   limit: number;
 }> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const startIndex = (page - 1) * limit;
-      const endIndex = page * limit;
-      const data = mockEmployees.slice(startIndex, endIndex);
-      
-      resolve({
-        data,
-        total: mockEmployees.length,
-        page,
-        limit
-      });
-    }, 500); // Simulate network delay
-  });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/employees?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch employees");
+    }
+
+    const data = await response.json();
+
+    // Transform the data to match the expected Employee type if needed
+    const employees = data.data.map((emp: any) => ({
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email,
+      employeeNumber: emp.employeeNumber,
+      phoneNumber: emp.phoneNumber,
+      contractStartDate: emp.contractStartDate ? new Date(emp.contractStartDate) : new Date(),
+      contractEndDate: emp.contractEndDate ? new Date(emp.contractEndDate) : undefined,
+      contractType: emp.contractType || ContractType.PERMANENT,
+      location: emp.location || "",
+      position: emp.position || ""
+    }));
+
+    return {
+      data: employees,
+      total: data.total,
+      page,
+      limit
+    };
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    // Fallback to mock data in case of error
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const data = mockEmployees.slice(startIndex, endIndex);
+
+    return {
+      data,
+      total: mockEmployees.length,
+      page,
+      limit
+    };
+  }
 };
 
 // Get employee by ID

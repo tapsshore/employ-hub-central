@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import EmployeeActions from "./EmployeeActions";
 import EmployeeSearch from "./EmployeeSearch";
 import EmployeeTable from "./EmployeeTable";
+import { ViewEmployeeModal } from "./ViewEmployeeModal";
+import { UpdateEmployeeModal } from "./UpdateEmployeeModal";
+import { updateEmployee } from "@/services/employee";
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -21,9 +24,11 @@ const EmployeeList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
+  const [viewEmployee, setViewEmployee] = useState<Employee | null>(null);
+  const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
+
   const userRole = localStorage.getItem("userRole") as UserRole || UserRole.EMPLOYEE;
-  
+
   const isAdmin = userRole === UserRole.ADMIN;
   const isHR = userRole === UserRole.HR_MANAGER || userRole === UserRole.HR_OFFICER;
   const canManageEmployees = isAdmin || isHR;
@@ -46,13 +51,33 @@ const EmployeeList = () => {
   }, [currentPage]);
 
   const handleViewEmployee = (employee: Employee) => {
-    console.log("View employee:", employee);
+    setViewEmployee(employee);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setEditEmployee(employee);
+  };
+
+  const handleUpdateEmployee = async (employeeId: string, employeeData: Partial<Employee>) => {
+    try {
+      const updatedEmployee = await updateEmployee(employeeId, employeeData);
+      if (updatedEmployee) {
+        // Update the employee in the local state
+        setEmployees(employees.map(emp => 
+          emp.id === employeeId ? { ...emp, ...updatedEmployee } : emp
+        ));
+        toast.success("Employee updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      toast.error("Failed to update employee");
+    }
   };
 
   const handleInviteEmployee = () => {
     console.log("Invite employee clicked");
   };
-  
+
   const handleDeleteEmployee = async (employeeId: string) => {
     if (confirm("Are you sure you want to delete this employee?")) {
       try {
@@ -87,7 +112,23 @@ const EmployeeList = () => {
           </div>
           <EmployeeActions 
             userRole={userRole} 
-            onInvite={handleInviteEmployee} 
+            onInvite={handleInviteEmployee}
+            onEmployeeAdded={() => {
+              setCurrentPage(1);
+              const fetchEmployees = async () => {
+                setIsLoading(true);
+                try {
+                  const response = await getEmployees(1, 10);
+                  setEmployees(response.data);
+                  setTotalPages(Math.ceil(response.total / response.limit));
+                } catch (error) {
+                  console.error("Error fetching employees:", error);
+                } finally {
+                  setIsLoading(false);
+                }
+              };
+              fetchEmployees();
+            }}
           />
         </div>
         <EmployeeSearch 
@@ -108,8 +149,9 @@ const EmployeeList = () => {
               isAdmin={isAdmin}
               onViewEmployee={handleViewEmployee}
               onDeleteEmployee={handleDeleteEmployee}
+              onEditEmployee={handleEditEmployee}
             />
-            
+
             {totalPages > 1 && (
               <div className="flex justify-center mt-4">
                 <div className="flex items-center space-x-2">
@@ -138,6 +180,24 @@ const EmployeeList = () => {
               </div>
             )}
           </>
+        )}
+
+        {viewEmployee && (
+          <ViewEmployeeModal
+            isOpen={!!viewEmployee}
+            onClose={() => setViewEmployee(null)}
+            employee={viewEmployee}
+            onEdit={handleEditEmployee}
+          />
+        )}
+
+        {editEmployee && (
+          <UpdateEmployeeModal
+            isOpen={!!editEmployee}
+            onClose={() => setEditEmployee(null)}
+            employee={editEmployee}
+            onUpdateEmployee={handleUpdateEmployee}
+          />
         )}
       </CardContent>
     </Card>
