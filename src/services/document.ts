@@ -1,4 +1,6 @@
+
 import { Document, DocumentType, DocumentStatus } from "../lib/types";
+import { toast } from "sonner";
 
 // Mock data - In a real implementation, this would be replaced with API calls
 const mockDocuments: Document[] = [

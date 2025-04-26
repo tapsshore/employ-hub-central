@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, UserPlus } from "lucide-react";
 import {
   Table,
@@ -19,8 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Employee, ContractType, UserRole } from "@/lib/types";
-import { getEmployees } from "@/services/employee";
+import { getEmployees, deleteEmployee } from "@/services/employee";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -81,6 +82,19 @@ const EmployeeList = () => {
 
   const handleInviteEmployee = () => {
     console.log("Invite employee clicked");
+  };
+  
+  const handleDeleteEmployee = async (employeeId: string) => {
+    if (confirm("Are you sure you want to delete this employee?")) {
+      try {
+        await deleteEmployee(employeeId);
+        setEmployees(employees.filter(emp => emp.id !== employeeId));
+        toast.success("Employee deleted successfully");
+      } catch (error) {
+        console.error("Error deleting employee:", error);
+        toast.error("Failed to delete employee");
+      }
+    }
   };
 
   return (
