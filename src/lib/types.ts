@@ -41,8 +41,8 @@ export interface Employee {
   email: string;
   employeeNumber: string;
   phoneNumber: string;
-  contractStartDate: Date;
-  contractEndDate?: Date;
+  contractStartDate: string;
+  contractEndDate?: string;
   contractType: ContractType;
   location: string;
   position: string;

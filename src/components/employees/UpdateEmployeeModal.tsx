@@ -38,20 +38,25 @@ export function UpdateEmployeeModal({
   const [formData, setFormData] = useState<Partial<Employee>>({});
 
   useEffect(() => {
-    // Format dates for the input fields
-    const startDate = employee.contractStartDate 
-      ? format(new Date(employee.contractStartDate), "yyyy-MM-dd")
-      : "";
-    
-    const endDate = employee.contractEndDate
-      ? format(new Date(employee.contractEndDate), "yyyy-MM-dd")
-      : "";
-    
-    setFormData({
-      ...employee,
-      contractStartDate: startDate as any,
-      contractEndDate: endDate as any,
-    });
+    if (employee) {
+      setFormData({
+        id: "",
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email,
+        employeeNumber: employee.employeeNumber,
+        phoneNumber: employee.phoneNumber,
+        contractType: employee.contractType,
+        location: employee.location,
+        position: employee.position,
+        contractStartDate: employee.contractStartDate
+            ? format(new Date(employee.contractStartDate), "yyyy-MM-dd")
+            : "",
+        contractEndDate: employee.contractEndDate
+            ? format(new Date(employee.contractEndDate), "yyyy-MM-dd")
+            : ""
+      });
+    }
   }, [employee]);
 
   const handleChange = (
@@ -81,8 +86,6 @@ export function UpdateEmployeeModal({
     }
   };
 
-  // @ts-ignore
-  // @ts-ignore
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
