@@ -52,6 +52,7 @@ const useFormField = () => {
   const { id } = itemContext
 
   // If there's no form context, return a subset of the data to avoid null errors
+  // We need to include error property even when outside form context
   if (!formContext) {
     return {
       id,
@@ -59,6 +60,7 @@ const useFormField = () => {
       formItemId: `${id}-form-item`,
       formDescriptionId: `${id}-form-item-description`,
       formMessageId: `${id}-form-item-message`,
+      error: undefined,
     }
   }
 
