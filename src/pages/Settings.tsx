@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   Card,
@@ -23,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -32,7 +34,25 @@ import { toast } from "sonner";
 const Settings = () => {
   const [loading, setLoading] = useState(false);
   
-  const handleSaveAccountSettings = () => {
+  // Create form instances for each form in the tabs
+  const accountForm = useForm({
+    defaultValues: {
+      firstName: "John",
+      lastName: "Doe",
+      email: "john.doe@example.com",
+      phoneNumber: "+1234567890",
+    }
+  });
+
+  const securityForm = useForm({
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    }
+  });
+  
+  const handleSaveAccountSettings = accountForm.handleSubmit((data) => {
     setLoading(true);
     
     // Simulate API call
@@ -42,7 +62,7 @@ const Settings = () => {
       });
       setLoading(false);
     }, 1000);
-  };
+  });
   
   const handleSaveNotificationSettings = () => {
     setLoading(true);
@@ -56,7 +76,7 @@ const Settings = () => {
     }, 1000);
   };
   
-  const handleSaveSecuritySettings = () => {
+  const handleSaveSecuritySettings = securityForm.handleSubmit((data) => {
     setLoading(true);
     
     // Simulate API call
@@ -65,8 +85,10 @@ const Settings = () => {
         description: "Your password has been updated successfully.",
       });
       setLoading(false);
+      // Reset form after successful submission
+      securityForm.reset();
     }, 1000);
-  };
+  });
 
   return (
     <DashboardLayout>
@@ -95,34 +117,70 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FormLabel>First Name</FormLabel>
-                    <Input defaultValue="John" />
-                  </div>
-                  <div className="space-y-2">
-                    <FormLabel>Last Name</FormLabel>
-                    <Input defaultValue="Doe" />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <FormLabel>Email</FormLabel>
-                  <Input defaultValue="john.doe@example.com" type="email" />
-                </div>
-                
-                <div className="space-y-2">
-                  <FormLabel>Phone Number</FormLabel>
-                  <Input defaultValue="+1234567890" />
-                </div>
-                
-                <Button 
-                  onClick={handleSaveAccountSettings}
-                  className="bg-hr-primary hover:bg-hr-primary/90"
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Save Changes"}
-                </Button>
+                <Form {...accountForm}>
+                  <form onSubmit={handleSaveAccountSettings} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={accountForm.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={accountForm.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={accountForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={accountForm.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit"
+                      className="bg-hr-primary hover:bg-hr-primary/90"
+                      disabled={loading}
+                    >
+                      {loading ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </TabsContent>
@@ -142,7 +200,7 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel>Document Updates</FormLabel>
+                      <Label>Document Updates</Label>
                       <FormDescription>
                         Receive notifications when documents are uploaded or updated.
                       </FormDescription>
@@ -154,7 +212,7 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel>Employee Updates</FormLabel>
+                      <Label>Employee Updates</Label>
                       <FormDescription>
                         Receive notifications about employee information changes.
                       </FormDescription>
@@ -166,7 +224,7 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel>System Notifications</FormLabel>
+                      <Label>System Notifications</Label>
                       <FormDescription>
                         Important updates about system maintenance and changes.
                       </FormDescription>
@@ -196,28 +254,56 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Current Password</FormLabel>
-                  <Input type="password" />
-                </div>
-                
-                <div className="space-y-2">
-                  <FormLabel>New Password</FormLabel>
-                  <Input type="password" />
-                </div>
-                
-                <div className="space-y-2">
-                  <FormLabel>Confirm New Password</FormLabel>
-                  <Input type="password" />
-                </div>
-                
-                <Button 
-                  onClick={handleSaveSecuritySettings}
-                  className="bg-hr-primary hover:bg-hr-primary/90"
-                  disabled={loading}
-                >
-                  {loading ? "Updating..." : "Update Password"}
-                </Button>
+                <Form {...securityForm}>
+                  <form onSubmit={handleSaveSecuritySettings} className="space-y-4">
+                    <FormField
+                      control={securityForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={securityForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={securityForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm New Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit"
+                      className="bg-hr-primary hover:bg-hr-primary/90"
+                      disabled={loading}
+                    >
+                      {loading ? "Updating..." : "Update Password"}
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
             
