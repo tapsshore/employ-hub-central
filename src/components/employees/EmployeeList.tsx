@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -62,7 +61,6 @@ const EmployeeList = () => {
     try {
       const updatedEmployee = await updateEmployee(employeeId, employeeData);
       if (updatedEmployee) {
-        // Update the employee in the local state
         setEmployees(employees.map(emp => 
           emp.id === employeeId ? { ...emp, ...updatedEmployee } : emp
         ));
@@ -72,10 +70,6 @@ const EmployeeList = () => {
       console.error("Error updating employee:", error);
       toast.error("Failed to update employee");
     }
-  };
-
-  const handleInviteEmployee = () => {
-    console.log("Invite employee clicked");
   };
 
   const handleDeleteEmployee = async (employeeId: string) => {
@@ -111,8 +105,7 @@ const EmployeeList = () => {
             </CardDescription>
           </div>
           <EmployeeActions 
-            userRole={userRole} 
-            onInvite={handleInviteEmployee}
+            userRole={userRole}
             onEmployeeAdded={() => {
               setCurrentPage(1);
               const fetchEmployees = async () => {

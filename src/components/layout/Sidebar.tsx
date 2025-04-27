@@ -33,11 +33,11 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   return (
     <div
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-hr-primary text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+        "fixed inset-y-0 left-0 z-20 flex w-64 flex-col bg-background border-r transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
-      <div className="flex h-16 items-center border-b border-white/10 px-6">
+      <div className="flex h-16 items-center border-b px-6">
         <Link to="/dashboard" className="flex items-center gap-2 font-bold">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -68,9 +68,9 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-white/10",
+                    "flex items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-accent",
                     location.pathname === item.path
-                      ? "bg-white/20 font-semibold"
+                      ? "bg-accent font-semibold"
                       : "transparent"
                   )}
                   onClick={() => {
@@ -85,8 +85,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             ))}
         </ul>
       </nav>
-      <div className="border-t border-white/10 p-4">
-        <div className="text-sm text-white/60">
+      <div className="border-t p-4">
+        <div className="text-sm text-muted-foreground">
           Logged in as: <span className="font-semibold">{userRole}</span>
         </div>
       </div>

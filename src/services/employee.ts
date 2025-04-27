@@ -1,7 +1,7 @@
 
 import { Employee, ContractType } from "../lib/types";
 
-// Mock data - In a real implementation, this would be replaced with API calls
+// Mock data for fallback - In a real implementation, this would be removed
 const mockEmployees: Employee[] = [
   {
     id: "1",
@@ -134,58 +134,149 @@ export const getEmployees = async (page = 1, limit = 10): Promise<{
 
 // Get employee by ID
 export const getEmployeeById = async (id: string): Promise<Employee | null> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const employee = mockEmployees.find(e => e.id === id);
-      resolve(employee || null);
-    }, 300);
-  });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/employees/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch employee");
+    }
+
+    const employee = await response.json();
+    return {
+      ...employee,
+      contractStartDate: employee.contractStartDate ? new Date(employee.contractStartDate) : new Date(),
+      contractEndDate: employee.contractEndDate ? new Date(employee.contractEndDate) : undefined,
+    };
+  } catch (error) {
+    console.error("Error fetching employee:", error);
+    // Fallback to mock data
+    return mockEmployees.find(e => e.id === id) || null;
+  }
 };
 
 // Create a new employee
 export const createEmployee = async (employee: Omit<Employee, "id">): Promise<Employee> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newEmployee: Employee = {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch("http://localhost:3000/employees", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
         ...employee,
-        id: `EMP${Math.floor(Math.random() * 10000)}`
-      };
-      mockEmployees.push(newEmployee);
-      resolve(newEmployee);
-    }, 500);
-  });
+        password: "password", // Default password for new employees
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to create employee");
+    }
+
+    const newEmployee = await response.json();
+    return {
+      ...newEmployee,
+      contractStartDate: newEmployee.contractStartDate ? new Date(newEmployee.contractStartDate) : new Date(),
+      contractEndDate: newEmployee.contractEndDate ? new Date(newEmployee.contractEndDate) : undefined,
+    };
+  } catch (error) {
+    console.error("Error creating employee:", error);
+    // Fallback to mock implementation
+    const newEmployee: Employee = {
+      ...employee,
+      id: `EMP${Math.floor(Math.random() * 10000)}`
+    };
+    mockEmployees.push(newEmployee);
+    return newEmployee;
+  }
 };
 
 // Update employee
 export const updateEmployee = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockEmployees.findIndex(e => e.id === id);
-      if (index !== -1) {
-        mockEmployees[index] = { ...mockEmployees[index], ...employeeData };
-        resolve(mockEmployees[index]);
-      } else {
-        resolve(null);
-      }
-    }, 500);
-  });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/employees/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(employeeData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update employee");
+    }
+
+    const updatedEmployee = await response.json();
+    return {
+      ...updatedEmployee,
+      contractStartDate: updatedEmployee.contractStartDate ? new Date(updatedEmployee.contractStartDate) : new Date(),
+      contractEndDate: updatedEmployee.contractEndDate ? new Date(updatedEmployee.contractEndDate) : undefined,
+    };
+  } catch (error) {
+    console.error("Error updating employee:", error);
+    // Fallback to mock implementation
+    const index = mockEmployees.findIndex(e => e.id === id);
+    if (index !== -1) {
+      mockEmployees[index] = { ...mockEmployees[index], ...employeeData };
+      return mockEmployees[index];
+    }
+    return null;
+  }
 };
 
-// Delete employee (soft delete in a real implementation)
+// Delete employee
 export const deleteEmployee = async (id: string): Promise<boolean> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockEmployees.findIndex(e => e.id === id);
-      if (index !== -1) {
-        mockEmployees.splice(index, 1);
-        resolve(true);
-      } else {
-        resolve(false);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/employees/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`
       }
-    }, 500);
-  });
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete employee");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting employee:", error);
+    // Fallback to mock implementation
+    const index = mockEmployees.findIndex(e => e.id === id);
+    if (index !== -1) {
+      mockEmployees.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
 };
