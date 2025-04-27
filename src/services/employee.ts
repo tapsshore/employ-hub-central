@@ -1,4 +1,3 @@
-
 import { Employee, ContractType } from "../lib/types";
 
 // Mock data for fallback - In a real implementation, this would be removed
@@ -103,8 +102,8 @@ export const getEmployees = async (page = 1, limit = 10): Promise<{
       email: emp.email,
       employeeNumber: emp.employeeNumber,
       phoneNumber: emp.phoneNumber,
-      contractStartDate: emp.contractStartDate ? new Date(emp.contractStartDate) : new Date(),
-      contractEndDate: emp.contractEndDate ? new Date(emp.contractEndDate) : undefined,
+      contractStartDate: emp.contractStartDate,
+      contractEndDate: emp.contractEndDate,
       contractType: emp.contractType || ContractType.PERMANENT,
       location: emp.location || "",
       position: emp.position || ""
@@ -155,8 +154,8 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
     const employee = await response.json();
     return {
       ...employee,
-      contractStartDate: employee.contractStartDate ? new Date(employee.contractStartDate) : new Date(),
-      contractEndDate: employee.contractEndDate ? new Date(employee.contractEndDate) : undefined,
+      contractStartDate: employee.contractStartDate,
+      contractEndDate: employee.contractEndDate,
     };
   } catch (error) {
     console.error("Error fetching employee:", error);
@@ -193,8 +192,8 @@ export const createEmployee = async (employee: Omit<Employee, "id">): Promise<Em
     const newEmployee = await response.json();
     return {
       ...newEmployee,
-      contractStartDate: newEmployee.contractStartDate ? new Date(newEmployee.contractStartDate) : new Date(),
-      contractEndDate: newEmployee.contractEndDate ? new Date(newEmployee.contractEndDate) : undefined,
+      contractStartDate: newEmployee.contractStartDate,
+      contractEndDate: newEmployee.contractEndDate,
     };
   } catch (error) {
     console.error("Error creating employee:", error);
@@ -233,8 +232,8 @@ export const updateEmployee = async (id: string, employeeData: Partial<Employee>
     const updatedEmployee = await response.json();
     return {
       ...updatedEmployee,
-      contractStartDate: updatedEmployee.contractStartDate ? new Date(updatedEmployee.contractStartDate) : new Date(),
-      contractEndDate: updatedEmployee.contractEndDate ? new Date(updatedEmployee.contractEndDate) : undefined,
+      contractStartDate: updatedEmployee.contractStartDate,
+      contractEndDate: updatedEmployee.contractEndDate,
     };
   } catch (error) {
     console.error("Error updating employee:", error);
