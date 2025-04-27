@@ -9,7 +9,7 @@ const mockEmployees: Employee[] = [
     email: "john.doe@example.com",
     employeeNumber: "EMP001",
     phoneNumber: "+1234567890",
-    contractStartDate: new Date("2022-01-01"),
+    contractStartDate: "2022-01-01",
     contractType: ContractType.PERMANENT,
     location: "New York",
     position: "Software Developer"
@@ -21,9 +21,9 @@ const mockEmployees: Employee[] = [
     email: "jane.smith@example.com",
     employeeNumber: "EMP002",
     phoneNumber: "+1234567891",
-    contractStartDate: new Date("2022-02-15"),
+    contractStartDate: "2022-02-15",
     contractType: ContractType.CONTRACT,
-    contractEndDate: new Date("2023-02-15"),
+    contractEndDate: "2023-02-15",
     location: "San Francisco",
     position: "UI/UX Designer"
   },
@@ -34,7 +34,7 @@ const mockEmployees: Employee[] = [
     email: "michael.johnson@example.com",
     employeeNumber: "EMP003",
     phoneNumber: "+1234567892",
-    contractStartDate: new Date("2021-06-10"),
+    contractStartDate: "2021-06-10",
     contractType: ContractType.PERMANENT,
     location: "Chicago",
     position: "Project Manager"
@@ -46,9 +46,9 @@ const mockEmployees: Employee[] = [
     email: "emily.williams@example.com",
     employeeNumber: "EMP004",
     phoneNumber: "+1234567893",
-    contractStartDate: new Date("2022-03-01"),
+    contractStartDate: "2022-03-01",
     contractType: ContractType.TEMPORARY,
-    contractEndDate: new Date("2022-09-01"),
+    contractEndDate: "2022-09-01",
     location: "Boston",
     position: "HR Specialist"
   },
@@ -59,7 +59,7 @@ const mockEmployees: Employee[] = [
     email: "david.brown@example.com",
     employeeNumber: "EMP005",
     phoneNumber: "+1234567894",
-    contractStartDate: new Date("2021-11-15"),
+    contractStartDate: "2021-11-15",
     contractType: ContractType.PERMANENT,
     location: "Seattle",
     position: "DevOps Engineer"
