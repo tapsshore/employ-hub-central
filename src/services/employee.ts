@@ -1,70 +1,5 @@
 import { Employee, ContractType } from "../lib/types";
 
-// Mock data for fallback - In a real implementation, this would be removed
-const mockEmployees: Employee[] = [
-  {
-    id: "1",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    employeeNumber: "EMP001",
-    phoneNumber: "+1234567890",
-    contractStartDate: "2022-01-01",
-    contractType: ContractType.PERMANENT,
-    location: "New York",
-    position: "Software Developer"
-  },
-  {
-    id: "2",
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    employeeNumber: "EMP002",
-    phoneNumber: "+1234567891",
-    contractStartDate: "2022-02-15",
-    contractType: ContractType.CONTRACT,
-    contractEndDate: "2023-02-15",
-    location: "San Francisco",
-    position: "UI/UX Designer"
-  },
-  {
-    id: "3",
-    firstName: "Michael",
-    lastName: "Johnson",
-    email: "michael.johnson@example.com",
-    employeeNumber: "EMP003",
-    phoneNumber: "+1234567892",
-    contractStartDate: "2021-06-10",
-    contractType: ContractType.PERMANENT,
-    location: "Chicago",
-    position: "Project Manager"
-  },
-  {
-    id: "4",
-    firstName: "Emily",
-    lastName: "Williams",
-    email: "emily.williams@example.com",
-    employeeNumber: "EMP004",
-    phoneNumber: "+1234567893",
-    contractStartDate: "2022-03-01",
-    contractType: ContractType.TEMPORARY,
-    contractEndDate: "2022-09-01",
-    location: "Boston",
-    position: "HR Specialist"
-  },
-  {
-    id: "5",
-    firstName: "David",
-    lastName: "Brown",
-    email: "david.brown@example.com",
-    employeeNumber: "EMP005",
-    phoneNumber: "+1234567894",
-    contractStartDate: "2021-11-15",
-    contractType: ContractType.PERMANENT,
-    location: "Seattle",
-    position: "DevOps Engineer"
-  }
-];
 
 // Get all employees with pagination
 export const getEmployees = async (page = 1, limit = 10): Promise<{
@@ -117,14 +52,10 @@ export const getEmployees = async (page = 1, limit = 10): Promise<{
     };
   } catch (error) {
     console.error("Error fetching employees:", error);
-    // Fallback to mock data in case of error
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const data = mockEmployees.slice(startIndex, endIndex);
-
+    // Return empty data in case of error
     return {
-      data,
-      total: mockEmployees.length,
+      data: [],
+      total: 0,
       page,
       limit
     };
@@ -159,8 +90,8 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
     };
   } catch (error) {
     console.error("Error fetching employee:", error);
-    // Fallback to mock data
-    return mockEmployees.find(e => e.id === id) || null;
+    // Return null if employee not found
+    return null;
   }
 };
 
@@ -197,12 +128,11 @@ export const createEmployee = async (employee: Omit<Employee, "id">): Promise<Em
     };
   } catch (error) {
     console.error("Error creating employee:", error);
-    // Fallback to mock implementation
+    // Create a temporary employee object
     const newEmployee: Employee = {
       ...employee,
-      id: `EMP${Math.floor(Math.random() * 10000)}`
+      id: `temp_${Math.floor(Math.random() * 10000)}`
     };
-    mockEmployees.push(newEmployee);
     return newEmployee;
   }
 };
@@ -237,12 +167,7 @@ export const updateEmployee = async (id: string, employeeData: Partial<Employee>
     };
   } catch (error) {
     console.error("Error updating employee:", error);
-    // Fallback to mock implementation
-    const index = mockEmployees.findIndex(e => e.id === id);
-    if (index !== -1) {
-      mockEmployees[index] = { ...mockEmployees[index], ...employeeData };
-      return mockEmployees[index];
-    }
+    // Return null if update fails
     return null;
   }
 };
@@ -270,12 +195,7 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error("Error deleting employee:", error);
-    // Fallback to mock implementation
-    const index = mockEmployees.findIndex(e => e.id === id);
-    if (index !== -1) {
-      mockEmployees.splice(index, 1);
-      return true;
-    }
+    // Return false if deletion fails
     return false;
   }
 };

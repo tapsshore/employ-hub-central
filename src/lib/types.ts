@@ -76,4 +76,7 @@ export interface LoginCredentials {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  isTwoFactorEnabled?: boolean;
+  isTwoFactorPending?: boolean;
+  tempToken?: string;
 }

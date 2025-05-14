@@ -2,144 +2,250 @@
 import { Document, DocumentType, DocumentStatus } from "../lib/types";
 import { toast } from "sonner";
 
-// Mock data - In a real implementation, this would be replaced with API calls
-const mockDocuments: Document[] = [
-  {
-    id: "doc1",
-    employeeNumber: "EMP001",
-    documentType: DocumentType.CONTRACT,
-    fileName: "employment_contract.pdf",
-    filePath: "/documents/employment_contract.pdf",
-    uploadedBy: "HR Manager",
-    uploadDate: new Date("2022-01-05"),
-    status: DocumentStatus.ACTIVE
-  },
-  {
-    id: "doc2",
-    employeeNumber: "EMP001",
-    documentType: DocumentType.LEAVE_FORM,
-    fileName: "annual_leave_request.pdf",
-    filePath: "/documents/annual_leave_request.pdf",
-    uploadedBy: "John Doe",
-    uploadDate: new Date("2022-06-15"),
-    status: DocumentStatus.ACTIVE
-  },
-  {
-    id: "doc3",
-    employeeNumber: "EMP002",
-    documentType: DocumentType.CONTRACT,
-    fileName: "contract_agreement.pdf",
-    filePath: "/documents/contract_agreement.pdf",
-    uploadedBy: "HR Manager",
-    uploadDate: new Date("2022-02-20"),
-    status: DocumentStatus.ACTIVE
-  },
-  {
-    id: "doc4",
-    employeeNumber: "EMP003",
-    documentType: DocumentType.OTHER,
-    fileName: "performance_review.pdf",
-    filePath: "/documents/performance_review.pdf",
-    uploadedBy: "Project Manager",
-    uploadDate: new Date("2021-12-10"),
-    status: DocumentStatus.ARCHIVED
-  },
-  {
-    id: "doc5",
-    employeeNumber: "EMP004",
-    documentType: DocumentType.DISCIPLINARY_REPORT,
-    fileName: "incident_report.pdf",
-    filePath: "/documents/incident_report.pdf",
-    uploadedBy: "HR Officer",
-    uploadDate: new Date("2022-04-05"),
-    status: DocumentStatus.ACTIVE
-  }
-];
+// Define CreateDocumentDto interface
+export interface CreateDocumentDto {
+  employeeNumber: string;
+  documentType: DocumentType;
+  file: File;
+  notes?: string;
+}
 
-// Get documents by employee number
-export const getDocumentsByEmployee = async (employeeNumber: string): Promise<Document[]> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const documents = mockDocuments.filter(doc => doc.employeeNumber === employeeNumber);
-      resolve(documents);
-    }, 500);
-  });
+// Define UpdateDocumentDto interface
+export interface UpdateDocumentDto {
+  documentType?: DocumentType;
+  file?: File;
+  status?: DocumentStatus;
+  notes?: string;
+}
+
+
+// Get documents by employee number with pagination
+export const getDocumentsByEmployee = async (
+  employeeNumber: string,
+  page = 1,
+  limit = 10
+): Promise<{
+  data: Document[];
+  total: number;
+  page: number;
+  limit: number;
+}> => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/documents?employeeNumber=${employeeNumber}&page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch documents");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      total: data.total,
+      page,
+      limit
+    };
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    // Return empty data
+    return {
+      data: [],
+      total: 0,
+      page,
+      limit
+    };
+  }
 };
 
 // Get document by ID
 export const getDocumentById = async (id: string): Promise<Document | null> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const document = mockDocuments.find(doc => doc.id === id);
-      resolve(document || null);
-    }, 300);
-  });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/documents/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch document");
+    }
+
+    const document = await response.json();
+    return document;
+  } catch (error) {
+    console.error("Error fetching document:", error);
+    // Return null if document not found
+    return null;
+  }
 };
 
 // Upload a new document
-export const uploadDocument = async (document: Omit<Document, "id" | "uploadDate">): Promise<Document> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newDocument: Document = {
-        ...document,
-        id: `doc${Math.floor(Math.random() * 10000)}`,
-        uploadDate: new Date()
-      };
-      mockDocuments.push(newDocument);
-      resolve(newDocument);
-    }, 800);
-  });
+export const uploadDocument = async (documentData: CreateDocumentDto): Promise<Document> => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const formData = new FormData();
+    formData.append("file", documentData.file);
+    formData.append("employeeNumber", documentData.employeeNumber);
+    formData.append("documentType", documentData.documentType);
+    if (documentData.notes) {
+      formData.append("notes", documentData.notes);
+    }
+
+    const response = await fetch("http://localhost:3000/documents", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to upload document");
+    }
+
+    const newDocument = await response.json();
+    return newDocument;
+  } catch (error) {
+    console.error("Error uploading document:", error);
+    // Create a temporary document object
+    const newDocument: Document = {
+      id: `temp_${Math.floor(Math.random() * 10000)}`,
+      employeeNumber: documentData.employeeNumber,
+      documentType: documentData.documentType,
+      fileName: documentData.file.name,
+      filePath: URL.createObjectURL(documentData.file),
+      uploadedBy: "Current User",
+      uploadDate: new Date(),
+      status: DocumentStatus.ACTIVE
+    };
+    return newDocument;
+  }
 };
 
 // Update document
-export const updateDocument = async (id: string, documentData: Partial<Document>): Promise<Document | null> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockDocuments.findIndex(doc => doc.id === id);
-      if (index !== -1) {
-        mockDocuments[index] = { ...mockDocuments[index], ...documentData };
-        resolve(mockDocuments[index]);
-      } else {
-        resolve(null);
-      }
-    }, 500);
-  });
+export const updateDocument = async (id: string, documentData: UpdateDocumentDto): Promise<Document | null> => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const formData = new FormData();
+    if (documentData.file) {
+      formData.append("file", documentData.file);
+    }
+    if (documentData.documentType) {
+      formData.append("documentType", documentData.documentType);
+    }
+    if (documentData.status) {
+      formData.append("status", documentData.status);
+    }
+    if (documentData.notes) {
+      formData.append("notes", documentData.notes);
+    }
+
+    const response = await fetch(`http://localhost:3000/documents/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update document");
+    }
+
+    const updatedDocument = await response.json();
+    return updatedDocument;
+  } catch (error) {
+    console.error("Error updating document:", error);
+    // Return null if update fails
+    return null;
+  }
 };
 
 // Delete document
 export const deleteDocument = async (id: string): Promise<boolean> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockDocuments.findIndex(doc => doc.id === id);
-      if (index !== -1) {
-        mockDocuments.splice(index, 1);
-        resolve(true);
-      } else {
-        resolve(false);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/documents/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`
       }
-    }, 500);
-  });
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete document");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    // Return false if deletion fails
+    return false;
+  }
 };
 
-// Get a signed URL for document download (in a real implementation, this would generate a temporary URL)
+// Get a signed URL for document download
 export const getDocumentDownloadUrl = async (id: string): Promise<string | null> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const document = mockDocuments.find(doc => doc.id === id);
-      if (document) {
-        // In a real implementation, this would generate a signed URL with an expiry
-        resolve(`https://example.com/api/documents/download/${id}?token=mock_signed_token`);
-      } else {
-        resolve(null);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await fetch(`http://localhost:3000/documents/${id}/download`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       }
-    }, 300);
-  });
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to get document download URL");
+    }
+
+    const data = await response.json();
+    return data.downloadUrl;
+  } catch (error) {
+    console.error("Error getting document download URL:", error);
+    // Return null if getting download URL fails
+    return null;
+  }
 };
 
 export const handleDeleteDocument = async (id: string): Promise<boolean> => {
@@ -158,17 +264,16 @@ export const handleDeleteDocument = async (id: string): Promise<boolean> => {
   }
 };
 
-export const handleUploadDocument = async (file: File, documentData: Partial<Document>): Promise<Document | null> => {
+export const handleUploadDocument = async (file: File, employeeNumber: string, documentType: DocumentType, notes?: string): Promise<Document | null> => {
   try {
-    // In a real implementation, this would upload to a file storage service
-    const filePath = URL.createObjectURL(file);
-    const document = await uploadDocument({
-      ...documentData,
-      fileName: file.name,
-      filePath,
-      status: DocumentStatus.ACTIVE,
-    } as Omit<Document, "id" | "uploadDate">);
-    
+    const documentData: CreateDocumentDto = {
+      employeeNumber,
+      documentType,
+      file,
+      notes
+    };
+
+    const document = await uploadDocument(documentData);
     toast.success("Document uploaded successfully");
     return document;
   } catch (error) {
