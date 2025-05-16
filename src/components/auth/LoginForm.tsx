@@ -177,14 +177,8 @@ const LoginForm = () => {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <a
-                    href="#forgot-password"
+                    href="/forgot-password"
                     className="text-xs text-hr-primary hover:underline"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toast.info("Password reset", {
-                        description: "This feature is not implemented yet.",
-                      });
-                    }}
                   >
                     Forgot password?
                   </a>

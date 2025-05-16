@@ -1,4 +1,3 @@
-
 import { LoginCredentials, AuthResponse, User, UserRole } from "../lib/types";
 import { toast } from "sonner";
 
@@ -332,4 +331,19 @@ export const checkAuth = async (): Promise<User | null> => {
     // Return null if token validation fails
     return null;
   }
+};
+
+// Export auth service as an object for easier imports
+export const authService = {
+  register,
+  login,
+  refreshToken,
+  forgotPassword,
+  resetPassword,
+  logout,
+  generate2fa,
+  enable2fa,
+  disable2fa,
+  verify2fa,
+  checkAuth,
 };
